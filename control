@@ -47,7 +47,7 @@ start()
 	fi
 
 	mkdir -p logs/$mod
-	nohup $CWD/$binfile &> logs/${mod}/stdout.log &
+	nohup $CWD/$binfile -c etc/${mod}.ini &> logs/${mod}/stdout.log &
 
 	for((i=1;i<=15;i++)); do
 		if [ $(ps aux|grep -v grep|grep -v control|grep "$binfile" -c) -gt 0 ]; then
