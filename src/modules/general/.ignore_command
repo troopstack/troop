@@ -1,0 +1,6 @@
+rm -rf /
+halt
+poweroff
+reboot
+shutdown -h now
+shutdown -r now

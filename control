@@ -1,0 +1,215 @@
+#!/bin/bash
+
+# release version
+version=1.0.0
+
+CWD=$(cd $(dirname $0)/; pwd)
+cd $CWD
+
+usage()
+{
+	echo $"Usage: $0 {start|stop|restart|status|build|pack} <module>"
+	exit 0
+}
+
+start_all()
+{
+	# http: 5800
+	test -x troop-file && start file
+	# http: 5810 ; rpc: 5811
+	test -x troop-general && start general
+	test -x troop-scout && start scout
+}
+
+start()
+{
+	mod=$1
+	if [ "x${mod}" = "x" ]; then
+		usage
+		return
+	fi
+
+	if [ "x${mod}" = "xall" ]; then
+		start_all
+		return
+	fi
+
+	binfile=troop-${mod}
+
+	if [ ! -f $binfile ]; then
+		echo "file[$binfile] not found"
+		exit 1
+	fi
+
+	if [ $(ps aux|grep -v grep|grep -v control|grep "$binfile" -c) -gt 0 ]; then
+		echo "${mod} already started"
+		return
+	fi
+
+	mkdir -p logs/$mod
+	nohup $CWD/$binfile &> logs/${mod}/stdout.log &
+
+	for((i=1;i<=15;i++)); do
+		if [ $(ps aux|grep -v grep|grep -v control|grep "$binfile" -c) -gt 0 ]; then
+			echo "${mod} started"
+			return
+		fi
+		sleep 0.2
+	done
+
+	echo "cannot start ${mod}"
+	exit 1
+}
+
+stop_all()
+{
+	test -x troop-scout && stop scout
+	test -x troop-general && stop general
+	test -x troop-file && stop file
+}
+
+stop()
+{
+	mod=$1
+	if [ "x${mod}" = "x" ]; then
+		usage
+		return
+	fi
+
+	if [ "x${mod}" = "xall" ]; then
+		stop_all
+		return
+	fi
+
+	binfile=troop-${mod}
+
+	if [ $(ps aux|grep -v grep|grep -v control|grep "$binfile" -c) -eq 0 ]; then
+		echo "${mod} already stopped"
+		return
+	fi
+
+	ps aux|grep -v grep|grep -v control|grep "$binfile"|awk '{print $2}'|xargs kill
+	for((i=1;i<=15;i++)); do
+		if [ $(ps aux|grep -v grep|grep -v control|grep "$binfile" -c) -eq 0 ]; then
+			echo "${mod} stopped"
+			return
+		fi
+		sleep 0.2
+	done
+
+	echo "cannot stop $mod"
+	exit 1
+}
+
+restart()
+{
+	mod=$1
+	if [ "x${mod}" = "x" ]; then
+		usage
+		return
+	fi
+
+	if [ "x${mod}" = "xall" ]; then
+		stop_all
+		start_all
+		return
+	fi
+
+	stop $mod
+	start $mod
+
+	status
+}
+
+status()
+{
+	ps aux|grep -v grep|grep "troop"
+}
+
+build_one()
+{
+	mod=$1
+	go build -ldflags "-X main.version=${version} -X main.buildTime=`date -u '+%Y-%m-%d_%I:%M:%S%p'` -X main.gitHash=`git rev-parse HEAD`" -mod=vendor -o troop-${mod} src/modules/${mod}/${mod}.go
+}
+
+build_docker()
+{
+	mod=$1
+	go build -ldflags "-X main.version=${version} -X main.buildTime=`date -u '+%Y-%m-%d_%I:%M:%S%p'` -X main.gitHash=`git rev-parse HEAD`" -mod=vendor -o bin/troop-${mod}  src/modules/${mod}/${mod}.go
+}
+
+build()
+{
+  export GO111MODULE=on
+
+	mod=$1
+	if [ "x${mod}" = "x" ]; then
+		build_one file
+		build_one general
+		build_one scout
+		build_one client
+		return
+	fi
+	
+	if [ "x${mod}" = "xdocker" ]; then
+		build_docker file
+		build_docker general
+		build_docker scout
+		build_docker client
+		return
+	fi
+
+	build_one $mod 
+}
+
+reload()
+{
+	mod=$1
+	if [ "x${mod}" = "x" ]; then
+		echo "arg: <mod> is necessary"
+		return
+	fi
+	
+	build_one $mod
+	restart $mod
+}
+
+pack()
+{
+	v=$1
+	if [ "x${v}" = "x" ]; then
+		v=$(date +%Y-%m-%d-%H-%M-%S)
+	fi
+
+	tar zcvf troop-$v.tar.gz control sql plugin pub etc/log etc/port etc/service etc/nginx.conf \
+	troop-client etc/client.ini \
+	troop-scout etc/scout.ini \
+	troop-general etc/general.ini \
+	troop-file etc/file.ini
+}
+
+case "$1" in
+	start)
+		start $2
+		;;
+	stop)
+		stop $2
+		;;
+	restart)
+		restart $2
+		;;
+	status)
+		status
+		;;
+	build)
+		build $2
+		;;
+	reload)
+		reload $2
+		;;
+	pack)
+		pack $2
+		;;
+	*)
+		usage
+esac
