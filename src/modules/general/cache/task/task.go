@@ -124,6 +124,29 @@ func (this *SafeTasks) CreateTaskScout(req *model.TaskScoutInfo) {
 	}
 }
 
+func (this *SafeTasks) CreateBalaTaskScout(req *model.TaskScoutInfo) {
+	this.Lock()
+	defer this.Unlock()
+	if val, exists := this.M[req.TaskId]; exists {
+		if _, scoutValExists := val.M[req.Tag]; !scoutValExists {
+			if req.Status == "execution" {
+				val.AcceptCount++
+			} else if req.Status == "successful" {
+				val.CompleteCount++
+				val.TaskDone()
+			} else if req.Status == "failed" {
+				val.CompleteCount++
+				val.TaskDone()
+			} else if req.Status == "unreachable" {
+				val.AcceptCount++
+				val.CompleteCount++
+				val.TaskDone()
+			}
+			val.M[req.Tag] = req
+		}
+	}
+}
+
 func (this *SafeTasks) PutTaskScoutStatus(taskId string, scout string, status string) {
 	this.Lock()
 	defer this.Unlock()
@@ -192,6 +215,24 @@ func (this *SafeTasks) GetTaskScout(taskId string, scout string) (*model.TaskSco
 	val, exists := this.M[taskId]
 	if exists {
 		TaskScouts, exists := val.M[scout]
+		return TaskScouts, exists
+	}
+	return nil, exists
+}
+
+func (this *SafeTasks) UpdateTaskScoutKey(taskId, oldKey, scout, scoutType string) (*model.TaskScoutInfo, bool) {
+	this.RLock()
+	defer this.RUnlock()
+	val, exists := this.M[taskId]
+	if exists {
+		TaskScouts, exists := val.M[oldKey]
+		if exists {
+			TaskScouts.Scout = scout
+			TaskScouts.ScoutType = scoutType
+			//val.M[scout] = TaskScouts
+			//delete(val.M, oldKey)
+			//this.M[taskId] = val
+		}
 		return TaskScouts, exists
 	}
 	return nil, exists

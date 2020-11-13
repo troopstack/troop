@@ -88,7 +88,7 @@ stop()
 		return
 	fi
 
-	ps aux|grep -v grep|grep -v control|grep "$binfile"|awk '{print $2}'|xargs kill
+	ps aux|grep -v grep|grep -v control|grep "$binfile"|awk '{print $2}'|xargs kill -9
 	for((i=1;i<=15;i++)); do
 		if [ $(ps aux|grep -v grep|grep -v control|grep "$binfile" -c) -eq 0 ]; then
 			echo "${mod} stopped"
@@ -150,7 +150,7 @@ build()
 		build_one client
 		return
 	fi
-	
+
 	if [ "x${mod}" = "xdocker" ]; then
 		build_docker file
 		build_docker general
@@ -159,7 +159,7 @@ build()
 		return
 	fi
 
-	build_one $mod 
+	build_one $mod
 }
 
 reload()
@@ -169,7 +169,7 @@ reload()
 		echo "arg: <mod> is necessary"
 		return
 	fi
-	
+
 	build_one $mod
 	restart $mod
 }

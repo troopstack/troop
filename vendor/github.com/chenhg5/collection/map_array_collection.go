@@ -585,10 +585,10 @@ func (c MapArrayCollection) Partition(cb PartCB) (Collection, Collection) {
 	}
 
 	return MapArrayCollection{
-			value: d1,
-		}, MapArrayCollection{
-			value: d2,
-		}
+		value: d1,
+	}, MapArrayCollection{
+		value: d2,
+	}
 }
 
 // Pop removes and returns the last item from the collection.

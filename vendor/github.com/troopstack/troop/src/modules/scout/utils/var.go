@@ -35,6 +35,9 @@ var (
 	GeneralIgnoreCommands []string
 
 	logger *log.Logger
+
+
+    MqConnChan chan string
 )
 
 func InitRootDir() {

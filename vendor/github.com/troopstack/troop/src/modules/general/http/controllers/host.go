@@ -108,7 +108,7 @@ func AcceptHost(c *gin.Context) {
 		Data: data,
 	}
 
-	_, err = rmq.AmqpServer.PutIntoQueue("scout", ScoutRouteKey, ScoutMessage)
+	_, err = rmq.AmqpServer.PutIntoQueue("scout", ScoutRouteKey, ScoutMessage, 0)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprint(err.Error())})
@@ -144,7 +144,7 @@ func AcceptAllHost(c *gin.Context) {
 			Data: data,
 		}
 
-		_, err = rmq.AmqpServer.PutIntoQueue("scout", ScoutRouteKey, ScoutMessage)
+		_, err = rmq.AmqpServer.PutIntoQueue("scout", ScoutRouteKey, ScoutMessage, 0)
 
 		if err != nil {
 			continue

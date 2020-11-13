@@ -13,6 +13,7 @@ type PluginRequest struct {
 	OS         string `json:"os"`
 	Detach     bool   `json:"detach" default:"false"`
 	Timeout    int    `json:"timeout"`
+	Priority   int    `json:"priority"`
 }
 
 type ScoutPluginRequest struct {

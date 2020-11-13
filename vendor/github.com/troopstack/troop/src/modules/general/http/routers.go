@@ -23,6 +23,7 @@ func InitRouter() http.Handler {
 	// 校验Token中间件
 	router.Use(tokenVerify())
 
+	router.POST("/bala_tasks", controllers.BalaTasks)
 	router.POST("/ping", controllers.Ping)
 	router.POST("/file", controllers.FileSend)
 	router.POST("/tasks", controllers.Tasks)

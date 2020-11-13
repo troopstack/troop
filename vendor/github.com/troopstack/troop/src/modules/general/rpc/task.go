@@ -10,6 +10,13 @@ import (
 )
 
 func (t *Scout) TaskAccept(args *model.TaskAcceptRequest, reply *model.SimpleRpcResponse) error {
+	isTagTask := false
+	taskKey := args.Tag
+	if taskKey == "" {
+		taskKey = args.Scout
+	} else {
+		isTagTask = true
+	}
 	if args.Scout == "" || args.TaskId == "" {
 		// 参数有误
 		reply.Code = 1
@@ -20,27 +27,46 @@ func (t *Scout) TaskAccept(args *model.TaskAcceptRequest, reply *model.SimpleRpc
 		if task.Lock {
 			// 任务已经被锁定
 			reply.Code = 1
-			return errors.New("task has ended")
+			return errors.New("Task has ended")
 		}
 	} else {
 		// 任务未找到
 		reply.Code = 1
 		return errors.New("Task not exists")
 	}
-
-	scout, exists := taskCache.Tasks.GetTaskScout(args.TaskId, args.Scout)
+	//firstAccept := true
+	scout, exists := taskCache.Tasks.GetTaskScout(args.TaskId, taskKey)
+	//if !exists && isTagTask {
+	//	firstAccept = false
+	//	scout, exists = taskCache.Tasks.GetTaskScout(args.TaskId, args.Scout)
+	//}
 	if !exists {
-		// Scout未找到
+		// 属于该Scout的任务未找到
 		reply.Code = 1
-		return errors.New("Scout not exists")
+		return errors.New("Task not exists or has been consumed")
 	}
-	if scout.Status != "wait" {
-		// 任务已经被接收过了
-		reply.Code = 1
-		return errors.New("task has been accepted")
-	}
-	taskCache.Tasks.PutTaskScoutStatus(scout.TaskId, scout.Scout, "execution")
-	reply.Code = 0
+	//if firstAccept {
+		if !isTagTask {
+			if scout.Status != "wait" {
+				// 任务已经被接收过了
+				reply.Code = 1
+				return errors.New("Task has been accepted")
+			}
+		} else {
+			if scout.Status == "successful" || scout.Status == "failed" {
+				// 任务已经被接收过了
+				reply.Code = 1
+				return errors.New("Task has been accepted")
+			}
+		}
+		taskCache.Tasks.PutTaskScoutStatus(scout.TaskId, taskKey, "execution")
+
+		if isTagTask {
+			taskCache.Tasks.UpdateTaskScoutKey(scout.TaskId, args.Tag, args.Scout, args.ScoutType)
+		}
+		reply.Code = 0
+	//}
+	//reply.Code = 0
 	return nil
 }
 

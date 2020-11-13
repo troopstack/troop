@@ -44,6 +44,7 @@ func main() {
 	}
 
 	utils.HandshakeChan = make(chan string, 1)
+	utils.MqConnChan = make(chan string, 1)
 	go rmq.SetupRMQ(true)
 	go utils.CallHandshake()
 
@@ -52,6 +53,12 @@ func main() {
 		case handshakeResult := <-utils.HandshakeChan:
 			if handshakeResult != "denied" {
 				go rmq.ReSetupRMQ()
+
+				select {
+				case <-utils.MqConnChan:
+					go rmq.MQBindTagQueue()
+				}
+
 			} else {
 				log.Print("handshake is rejected")
 				os.Exit(0)
