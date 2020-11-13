@@ -220,7 +220,6 @@ func (this *SafeTasks) GetTaskScout(taskId string, scout string) (*model.TaskSco
 	return nil, exists
 }
 
-
 func (this *SafeTasks) UpdateTaskScoutKey(taskId, oldKey, scout, scoutType string) (*model.TaskScoutInfo, bool) {
 	this.RLock()
 	defer this.RUnlock()

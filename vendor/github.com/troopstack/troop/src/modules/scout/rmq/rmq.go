@@ -105,7 +105,7 @@ func SetupRMQ(initConn bool) {
 		q, err := channel.QueueDeclare(
 			queueName, // name
 			true,      // durable
-			false,     // delete when usused
+			true,     // delete when usused
 			false,     // exclusive
 			false,     // no-wait
 			args,      // arguments
