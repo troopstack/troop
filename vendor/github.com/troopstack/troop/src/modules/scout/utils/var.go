@@ -36,8 +36,7 @@ var (
 
 	logger *log.Logger
 
-
-    MqConnChan chan string
+	MqConnChan chan string
 )
 
 func InitRootDir() {

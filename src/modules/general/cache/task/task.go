@@ -229,9 +229,9 @@ func (this *SafeTasks) UpdateTaskScoutKey(taskId, oldKey, scout, scoutType strin
 		if exists {
 			TaskScouts.Scout = scout
 			TaskScouts.ScoutType = scoutType
-			//val.M[scout] = TaskScouts
-			//delete(val.M, oldKey)
-			//this.M[taskId] = val
+			val.M[scout] = TaskScouts
+			delete(val.M, oldKey)
+			this.M[taskId] = val
 		}
 		return TaskScouts, exists
 	}

@@ -9,6 +9,15 @@ import (
 	"github.com/troopstack/troop/src/modules/general/utils"
 )
 
+func getMapKeys(m map[string]*model.TaskScoutInfo) []string {
+	// 数组默认长度为map长度,后面append时,不需要重新申请内存和拷贝,效率较高
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
 func (t *Scout) TaskAccept(args *model.TaskAcceptRequest, reply *model.SimpleRpcResponse) error {
 	isTagTask := false
 	taskKey := args.Tag
@@ -40,31 +49,37 @@ func (t *Scout) TaskAccept(args *model.TaskAcceptRequest, reply *model.SimpleRpc
 	//	firstAccept = false
 	//	scout, exists = taskCache.Tasks.GetTaskScout(args.TaskId, args.Scout)
 	//}
+	if !exists && isTagTask {
+		keys := getMapKeys(task.M)
+		if len(keys) > 0 {
+			scout, exists = taskCache.Tasks.GetTaskScout(args.TaskId, keys[0])
+		}
+	}
 	if !exists {
 		// 属于该Scout的任务未找到
 		reply.Code = 1
 		return errors.New("Task not exists or has been consumed")
 	}
 	//if firstAccept {
-		if !isTagTask {
-			if scout.Status != "wait" {
-				// 任务已经被接收过了
-				reply.Code = 1
-				return errors.New("Task has been accepted")
-			}
-		} else {
-			if scout.Status == "successful" || scout.Status == "failed" {
-				// 任务已经被接收过了
-				reply.Code = 1
-				return errors.New("Task has been accepted")
-			}
+	if !isTagTask {
+		if scout.Status != "wait" {
+			// 任务已经被接收过了
+			reply.Code = 1
+			return errors.New("Task has been accepted")
 		}
-		taskCache.Tasks.PutTaskScoutStatus(scout.TaskId, taskKey, "execution")
+	} else {
+		if scout.Status == "successful" || scout.Status == "failed" {
+			// 任务已经被接收过了
+			reply.Code = 1
+			return errors.New("Task has been accepted")
+		}
+	}
+	taskCache.Tasks.PutTaskScoutStatus(scout.TaskId, taskKey, "execution")
 
-		if isTagTask {
-			taskCache.Tasks.UpdateTaskScoutKey(scout.TaskId, args.Tag, args.Scout, args.ScoutType)
-		}
-		reply.Code = 0
+	if isTagTask {
+		taskCache.Tasks.UpdateTaskScoutKey(scout.TaskId, args.Tag, args.Scout, args.ScoutType)
+	}
+	reply.Code = 0
 	//}
 	//reply.Code = 0
 	return nil

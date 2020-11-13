@@ -101,14 +101,14 @@ func SetupRMQ(initConn bool) {
 			panic(err)
 		}
 		var args amqp.Table
-		args = amqp.Table{"x-max-priority":int32(10)}
+		args = amqp.Table{"x-max-priority": int32(10)}
 		q, err := channel.QueueDeclare(
 			queueName, // name
-			true,     // durable
-			false,      // delete when usused
+			true,      // durable
+			false,     // delete when usused
 			false,     // exclusive
 			false,     // no-wait
-			args,       // arguments
+			args,      // arguments
 		)
 
 		failOnError(err, "Failed to declare a queue")
@@ -156,16 +156,16 @@ func Handle(delivery <-chan amqp.Delivery, autoAck bool) {
 	}
 }
 
-func DeclareQueue(name string)  {
+func DeclareQueue(name string) {
 	var args amqp.Table
-	args = amqp.Table{"x-max-priority":int32(10)}
+	args = amqp.Table{"x-max-priority": int32(10)}
 	q, err := channel.QueueDeclare(
-		name, // name
-		true,     // durable
-		false,      // delete when usused
-		false,     // exclusive
-		false,     // no-wait
-		args,       // arguments
+		name,  // name
+		true,  // durable
+		false, // delete when usused
+		false, // exclusive
+		false, // no-wait
+		args,  // arguments
 	)
 
 	failOnError(err, "Func: DeclareQueue, Failed to declare a queue")
@@ -175,20 +175,20 @@ func DeclareQueue(name string)  {
 
 	defer utils.CoverErrorMessage()
 	err = channel.QueueBind(
-		q.Name,    // queue name
-		q.Name,      // routing key
+		q.Name,       // queue name
+		q.Name,       // routing key
 		ExchangeName, // exchange
 		false,
 		nil,
 	)
 	failOnError(err, "Failed to bind a queue")
 
-	err =  channel.Qos(1, 0, false)
+	err = channel.Qos(1, 0, false)
 
 	msgs, err := channel.Consume(
 		q.Name, // queue
 		"",     // consumer
-		false,   // auto-ack
+		false,  // auto-ack
 		false,  // exclusive
 		false,  // no-local
 		false,  // no-wait

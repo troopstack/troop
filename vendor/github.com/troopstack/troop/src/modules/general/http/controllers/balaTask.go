@@ -79,7 +79,7 @@ func BalaTasks(c *gin.Context) {
 
 	ScoutMessage := model.ScoutMessage{
 		Type: "bala_task",
-		Tag: t.Tag,
+		Tag:  t.Tag,
 		Data: []byte(utils.AES_CBC_Encrypt(data, utils.AES)),
 	}
 	oScouts := []*model.Host{scouts[0]}

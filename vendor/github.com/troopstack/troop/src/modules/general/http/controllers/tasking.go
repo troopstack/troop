@@ -119,11 +119,11 @@ func TaskPush(taskId string, scouts []*model.Host, TaskScouts taskCache.TaskScou
 func BalaTaskPush(taskId string, tag string, TaskScouts taskCache.TaskScouts, ScoutMessage model.ScoutMessage, Priority uint8) {
 
 	TaskScoutInfo := model.TaskScoutInfo{
-		TaskId:    taskId,
-		Tag:       tag,
-		Result:    "",
-		Error:     "",
-		Status:    "wait",
+		TaskId: taskId,
+		Tag:    tag,
+		Result: "",
+		Error:  "",
+		Status: "wait",
 	}
 
 	taskCache.Tasks.CreateBalaTaskScout(&TaskScoutInfo)
