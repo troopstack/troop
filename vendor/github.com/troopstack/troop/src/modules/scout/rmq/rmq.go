@@ -105,7 +105,7 @@ func SetupRMQ(initConn bool) {
 		q, err := channel.QueueDeclare(
 			queueName, // name
 			true,      // durable
-			true,     // delete when usused
+			true,      // delete when usused
 			false,     // exclusive
 			false,     // no-wait
 			args,      // arguments
@@ -146,6 +146,8 @@ func SetupRMQ(initConn bool) {
 	if initConn {
 		go ReConnect()
 		utils.MqConnChan <- "true"
+	} else {
+		go MQBindTagQueue()
 	}
 	return
 }

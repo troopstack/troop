@@ -146,6 +146,8 @@ func SetupRMQ(initConn bool) {
 	if initConn {
 		go ReConnect()
 		utils.MqConnChan <- "true"
+	} else {
+		go MQBindTagQueue()
 	}
 	return
 }
