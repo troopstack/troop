@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"errors"
+	"log"
 
 	"github.com/troopstack/troop/src/model"
 	taskCache "github.com/troopstack/troop/src/modules/general/cache/task"
@@ -98,13 +99,25 @@ func (t *Scout) TaskResult(args *model.TaskResultRequest, reply *model.SimpleRpc
 		reply.Code = 1
 		return errors.New("Scout not exists")
 	}
-	ScoutAES := utils.AES_CBC_Decrypt(host.AES, utils.AESKey)
+	ScoutAES, err := utils.AES_CBC_Decrypt(host.AES, utils.AESKey)
+	if err != nil {
+		log.Print(err)
+		return errors.New("untrusted scout")
+	}
 	if args.Result != "" {
-		result := utils.AES_CBC_Decrypt(args.Result, string(ScoutAES))
+		result, err := utils.AES_CBC_Decrypt(args.Result, string(ScoutAES))
+		if err != nil {
+			log.Print(err)
+			return errors.New("untrusted scout")
+		}
 		taskCache.Tasks.PutTaskScoutResult(args.TaskId, args.Scout, string(result), false)
 	}
 	if args.Error != "" {
-		errorMsg := utils.AES_CBC_Decrypt(args.Error, string(ScoutAES))
+		errorMsg, err := utils.AES_CBC_Decrypt(args.Error, string(ScoutAES))
+		if err != nil {
+			log.Print(err)
+			return errors.New("untrusted scout")
+		}
 		taskCache.Tasks.PutTaskScoutResult(args.TaskId, args.Scout, string(errorMsg), true)
 	}
 

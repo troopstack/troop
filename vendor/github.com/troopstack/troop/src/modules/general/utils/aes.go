@@ -5,6 +5,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/base64"
+	"errors"
 	"math/rand"
 	"time"
 )
@@ -39,13 +40,15 @@ func Padding(plainText []byte, blockSize int) []byte {
 }
 
 // 对密文删除填充
-func UnPadding(cipherText []byte) []byte {
+func UnPadding(cipherText []byte) ([]byte, error) {
 	// 取出密文最后一个字节end
 	end := cipherText[len(cipherText)-1]
-
+	if int(end) > len(cipherText) {
+		return nil, errors.New("invalid aes")
+	}
 	// 删除填充
 	cipherText = cipherText[:len(cipherText)-int(end)]
-	return cipherText
+	return cipherText, nil
 }
 
 // AEC加密（CBC模式）
@@ -74,13 +77,13 @@ func AES_CBC_Encrypt(plainText []byte, key string) string {
 }
 
 // AEC解密（CBC模式）
-func AES_CBC_Decrypt(cipherText string, key string) []byte {
+func AES_CBC_Decrypt(cipherText string, key string) ([]byte, error) {
 	decodeBytes, err := base64.StdEncoding.DecodeString(cipherText)
 
 	// 指定解密算法，返回一个AES算法的Block接口对象
 	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	// 指定初始化向量IV,和加密的一致
@@ -94,6 +97,9 @@ func AES_CBC_Decrypt(cipherText string, key string) []byte {
 	blockMode.CryptBlocks(plainText, decodeBytes)
 
 	// 删除填充
-	plainText = UnPadding(plainText)
-	return plainText
+	plainText, err = UnPadding(plainText)
+	if err != nil {
+		return nil, err
+	}
+	return plainText, nil
 }

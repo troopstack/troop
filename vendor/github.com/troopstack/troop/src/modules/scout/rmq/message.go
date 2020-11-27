@@ -46,10 +46,13 @@ func MessageProcess(d amqp.Delivery, autoAck bool) {
 			return
 		}
 		// 使用General的AES解密
-		data := utils.AES_CBC_Decrypt(string(ScoutMessage.Data), utils.GeneralAES)
-
+		data, err := utils.AES_CBC_Decrypt(string(ScoutMessage.Data), utils.GeneralAES)
+		if err != nil {
+			log.Print(err.Error())
+			return
+		}
 		ScoutTaskRequest := model.ScoutTaskRequest{}
-		err := json.Unmarshal(data, &ScoutTaskRequest)
+		err = json.Unmarshal(data, &ScoutTaskRequest)
 		if err != nil {
 			log.Print(err.Error())
 			return
@@ -109,10 +112,14 @@ func MessageProcess(d amqp.Delivery, autoAck bool) {
 			return
 		}
 		// 使用General的AES解密
-		data := utils.AES_CBC_Decrypt(string(ScoutMessage.Data), utils.GeneralAES)
+		data, err := utils.AES_CBC_Decrypt(string(ScoutMessage.Data), utils.GeneralAES)
+		if err != nil {
+			log.Print(err.Error())
+			return
+		}
 
 		ScoutTaskRequest := model.ScoutPingRequest{}
-		err := json.Unmarshal(data, &ScoutTaskRequest)
+		err = json.Unmarshal(data, &ScoutTaskRequest)
 		if err != nil {
 			log.Print(err.Error())
 			return
@@ -141,10 +148,14 @@ func MessageProcess(d amqp.Delivery, autoAck bool) {
 			return
 		}
 		// 使用General的AES解密
-		data := utils.AES_CBC_Decrypt(string(ScoutMessage.Data), utils.GeneralAES)
+		data, err := utils.AES_CBC_Decrypt(string(ScoutMessage.Data), utils.GeneralAES)
+		if err != nil {
+			log.Print(err.Error())
+			return
+		}
 
 		ScoutTaskRequest := model.ScoutFileRequest{}
-		err := json.Unmarshal(data, &ScoutTaskRequest)
+		err = json.Unmarshal(data, &ScoutTaskRequest)
 		if err != nil {
 			log.Print(err.Error())
 			return
@@ -176,10 +187,14 @@ func MessageProcess(d amqp.Delivery, autoAck bool) {
 			return
 		}
 		// 使用General的AES解密
-		data := utils.AES_CBC_Decrypt(string(ScoutMessage.Data), utils.GeneralAES)
+		data, err := utils.AES_CBC_Decrypt(string(ScoutMessage.Data), utils.GeneralAES)
+		if err != nil {
+			log.Print(err.Error())
+			return
+		}
 
 		ScoutPluginRequest := model.ScoutPluginRequest{}
-		err := json.Unmarshal(data, &ScoutPluginRequest)
+		err = json.Unmarshal(data, &ScoutPluginRequest)
 		if err != nil {
 			log.Print(err.Error())
 			return
@@ -233,10 +248,14 @@ func MessageProcess(d amqp.Delivery, autoAck bool) {
 			return
 		}
 		// 使用General的AES解密
-		data := utils.AES_CBC_Decrypt(string(ScoutMessage.Data), utils.GeneralAES)
+		data, err := utils.AES_CBC_Decrypt(string(ScoutMessage.Data), utils.GeneralAES)
+		if err != nil {
+			log.Print(err.Error())
+			return
+		}
 
 		ScoutTaskRequest := model.FileManageTaskRequest{}
-		err := json.Unmarshal(data, &ScoutTaskRequest)
+		err = json.Unmarshal(data, &ScoutTaskRequest)
 		if err != nil {
 			log.Print(err.Error())
 			return
@@ -290,10 +309,14 @@ func MessageProcess(d amqp.Delivery, autoAck bool) {
 			return
 		}
 		// 使用General的AES解密
-		data := utils.AES_CBC_Decrypt(string(ScoutMessage.Data), utils.GeneralAES)
+		data, err := utils.AES_CBC_Decrypt(string(ScoutMessage.Data), utils.GeneralAES)
+		if err != nil {
+			log.Print(err.Error())
+			return
+		}
 
 		ScoutPluginRequest := model.ScoutPluginRequest{}
-		err := json.Unmarshal(data, &ScoutPluginRequest)
+		err = json.Unmarshal(data, &ScoutPluginRequest)
 		if err != nil {
 			log.Print(err.Error())
 			return

@@ -30,9 +30,13 @@ func RandomGenerateTaskId() string {
 // 处理RMQ不可达的任务
 func TaskReturn(message model.ScoutMessage, routerKey string) {
 	// AES解密
-	data := AES_CBC_Decrypt(string(message.Data), AES)
+	data, err := AES_CBC_Decrypt(string(message.Data), AES)
+	if err != nil {
+		log.Print(err.Error())
+		return
+	}
 	task := &model.ScoutTaskRequest{}
-	err := json.Unmarshal(data, &task)
+	err = json.Unmarshal(data, &task)
 	if err != nil {
 		log.Print(err.Error())
 		return
