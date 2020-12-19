@@ -1,4 +1,5 @@
-
+<img src="https://github.com/troopstack/troop/raw/master/assets/troop.png" width="200">
+<br>
 Troop是由Golang编写的运维自动化底层基础设施，一套完整的服务器集中化管理系统。
 
 ## 文档
