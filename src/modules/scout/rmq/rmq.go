@@ -100,17 +100,15 @@ func SetupRMQ(initConn bool) {
 		if err != nil {
 			panic(err)
 		}
-		var args amqp.Table
-		args = amqp.Table{"x-max-priority": int32(10)}
+
 		q, err := channel.QueueDeclare(
 			queueName, // name
-			true,      // durable
+			false,     // durable
 			true,      // delete when usused
 			false,     // exclusive
 			false,     // no-wait
-			args,      // arguments
+			nil,       // arguments
 		)
-
 		failOnError(err, "Failed to declare a queue")
 		if err != nil {
 			panic(err)
@@ -119,8 +117,6 @@ func SetupRMQ(initConn bool) {
 		for r := range routing {
 			QueueBind(routing[r])
 		}
-
-		//err =  channel.Qos(1, 0, true)
 
 		msgs, err := channel.Consume(
 			q.Name, // queue
@@ -136,7 +132,7 @@ func SetupRMQ(initConn bool) {
 			panic(err)
 		}
 
-		go Handle(msgs, true)
+		go Handle(msgs)
 
 		//if accepted {
 		connNotify = conn.NotifyClose(make(chan *amqp.Error))
@@ -145,63 +141,14 @@ func SetupRMQ(initConn bool) {
 	}
 	if initConn {
 		go ReConnect()
-		utils.MqConnChan <- "true"
-	} else {
-		go MQBindTagQueue()
 	}
 	return
 }
 
-func Handle(delivery <-chan amqp.Delivery, autoAck bool) {
+func Handle(delivery <-chan amqp.Delivery) {
 	for d := range delivery {
-		go MessageProcess(d, autoAck)
+		go MessageProcess(d.Body)
 	}
-}
-
-func DeclareQueue(name string) {
-	var args amqp.Table
-	args = amqp.Table{"x-max-priority": int32(10)}
-	q, err := channel.QueueDeclare(
-		name,  // name
-		true,  // durable
-		false, // delete when usused
-		false, // exclusive
-		false, // no-wait
-		args,  // arguments
-	)
-
-	failOnError(err, "Func: DeclareQueue, Failed to declare a queue")
-	if err != nil {
-		panic(err)
-	}
-
-	defer utils.CoverErrorMessage()
-	err = channel.QueueBind(
-		q.Name,       // queue name
-		q.Name,       // routing key
-		ExchangeName, // exchange
-		false,
-		nil,
-	)
-	failOnError(err, "Failed to bind a queue")
-
-	err = channel.Qos(1, 0, false)
-
-	msgs, err := channel.Consume(
-		q.Name, // queue
-		"",     // consumer
-		false,  // auto-ack
-		false,  // exclusive
-		false,  // no-local
-		false,  // no-wait
-		nil,    // args
-	)
-	failOnError(err, "Func: DeclareQueue, Failed to register a consumer")
-	if err != nil {
-		panic(err)
-	}
-
-	go Handle(msgs, false)
 }
 
 func QueueBind(routing string) {
@@ -228,23 +175,10 @@ func ReSetupRMQ() {
 	//SetupRMQ(false)
 	routing = append(routing, "scout."+hostname)
 	routing = append(routing, queueName)
-
 	//if !conn.IsClosed() {
 	QueueBind("scout." + hostname)
 	QueueBind(queueName)
 	//}
-}
-
-func MQBindTagQueue() {
-	tags := utils.Config().Host.Tag
-	for i := range tags {
-		if tags[i] != "" {
-			tag := "scout.tag." + tags[i]
-			//routing = append(routing, tag)
-			DeclareQueue(tag)
-			//QueueBind(tag)
-		}
-	}
 }
 
 func ReConnect() {
