@@ -17,7 +17,7 @@ cd troop
 
 ## Contributors
 
-[KurolZ](https://github.com/kurolz)
+<a href="https://github.com/troopstack/troop/contributors"><img src="https://opencollective.com/troop/contributors.svg?button=false" /></a>
 
 ## License
 
