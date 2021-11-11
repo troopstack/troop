@@ -34,7 +34,7 @@ func isDir(dir string) bool {
 // 如果目录不存在则创建
 func CreateDir(dir string) error {
 	if !isDir(dir) {
-		err := os.Mkdir(dir, 0666)
+		err := os.Mkdir(dir, 0766)
 		FailOnError(err, "")
 		return err
 	}
@@ -50,7 +50,7 @@ func IsFile(file string) bool {
 	return existed
 }
 
-// 将文件或目录打包成 .tar 文件
+// 将文件或目录打包成 .tar
 // src 是要打包的文件或目录的路径
 // dstTar 是要生成的 .tar 文件的路径
 // failIfExist 标记如果 dstTar 文件存在，是否放弃打包，如果否，则会覆盖已存在的文件

@@ -14,26 +14,69 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func HostList(c *gin.Context) {
+	h := gin.H{
+		"result":  []*model.Host{},
+		"error":   "",
+		"code":    0,
+	}
+
+	hosts := []*model.Host{}
+	query := database.DBConn().Preload("Tags")
+
+	// 分页
+	paging, query := Pagination(c, query)
+
+	// 执行查询
+	query.Find(&hosts)
+	if paging {
+		var count int
+		database.DBConn().Model(&hosts).Count(&count)
+		pageRes := model.PageResponseBody{
+			Count: count,
+			Data: hosts,
+		}
+		h["result"] = pageRes
+	} else {
+		h["result"] = hosts
+	}
+	c.JSON(http.StatusOK, h)
+	return
+}
+
 type AllHosts struct {
 	Accepted   []*model.Host
 	Unaccepted []string
 	Denied     []string
 }
 
-func HostList(c *gin.Context) {
-	AllHosts := AllHosts{}
+func AllHostList(c *gin.Context) {
+	AllHostsMap := AllHosts{}
+
+	h := gin.H{
+		"result":  AllHosts{
+			Accepted: []*model.Host{},
+			Unaccepted: []string{},
+			Denied: []string{},
+		},
+		"error":   "",
+		"code":    0,
+	}
+
 	hosts := []*model.Host{}
 	database.DBConn().Preload("Tags").Find(&hosts)
-	AllHosts.Accepted = hosts
+
+	AllHostsMap.Accepted = hosts
 	CacheHosts := cache.Scouts.All()
 	for i := range CacheHosts {
 		if CacheHosts[i].Status == "unaccepted" {
-			AllHosts.Unaccepted = append(AllHosts.Unaccepted, CacheHosts[i].Hostname)
+			AllHostsMap.Unaccepted = append(AllHostsMap.Unaccepted, CacheHosts[i].Hostname)
 		} else if CacheHosts[i].Status == "denied" {
-			AllHosts.Denied = append(AllHosts.Denied, CacheHosts[i].Hostname)
+			AllHostsMap.Denied = append(AllHostsMap.Denied, CacheHosts[i].Hostname)
 		}
 	}
-	c.JSON(http.StatusOK, gin.H{"result": AllHosts})
+	h["result"] = AllHostsMap
+	c.JSON(http.StatusOK, h)
 	return
 }
 
