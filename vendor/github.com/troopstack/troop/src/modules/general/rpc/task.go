@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"errors"
+	"log"
 
 	"github.com/troopstack/troop/src/model"
 	taskCache "github.com/troopstack/troop/src/modules/general/cache/task"
@@ -9,7 +10,23 @@ import (
 	"github.com/troopstack/troop/src/modules/general/utils"
 )
 
+func getMapKeys(m map[string]*model.TaskScoutInfo) []string {
+	// 数组默认长度为map长度,后面append时,不需要重新申请内存和拷贝,效率较高
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
 func (t *Scout) TaskAccept(args *model.TaskAcceptRequest, reply *model.SimpleRpcResponse) error {
+	isTagTask := false
+	taskKey := args.Tag
+	if taskKey == "" {
+		taskKey = args.Scout
+	} else {
+		isTagTask = true
+	}
 	if args.Scout == "" || args.TaskId == "" {
 		// 参数有误
 		reply.Code = 1
@@ -20,27 +37,52 @@ func (t *Scout) TaskAccept(args *model.TaskAcceptRequest, reply *model.SimpleRpc
 		if task.Lock {
 			// 任务已经被锁定
 			reply.Code = 1
-			return errors.New("task has ended")
+			return errors.New("Task has ended")
 		}
 	} else {
 		// 任务未找到
 		reply.Code = 1
 		return errors.New("Task not exists")
 	}
-
-	scout, exists := taskCache.Tasks.GetTaskScout(args.TaskId, args.Scout)
+	//firstAccept := true
+	scout, exists := taskCache.Tasks.GetTaskScout(args.TaskId, taskKey)
+	//if !exists && isTagTask {
+	//	firstAccept = false
+	//	scout, exists = taskCache.Tasks.GetTaskScout(args.TaskId, args.Scout)
+	//}
+	if !exists && isTagTask {
+		keys := getMapKeys(task.M)
+		if len(keys) > 0 {
+			scout, exists = taskCache.Tasks.GetTaskScout(args.TaskId, keys[0])
+		}
+	}
 	if !exists {
-		// Scout未找到
+		// 属于该Scout的任务未找到
 		reply.Code = 1
-		return errors.New("Scout not exists")
+		return errors.New("Task not exists or has been consumed")
 	}
-	if scout.Status != "wait" {
-		// 任务已经被接收过了
-		reply.Code = 1
-		return errors.New("task has been accepted")
+	//if firstAccept {
+	if !isTagTask {
+		if scout.Status != "wait" {
+			// 任务已经被接收过了
+			reply.Code = 1
+			return errors.New("Task has been accepted")
+		}
+	} else {
+		if scout.Status == "successful" || scout.Status == "failed" {
+			// 任务已经被接收过了
+			reply.Code = 1
+			return errors.New("Task has been accepted")
+		}
 	}
-	taskCache.Tasks.PutTaskScoutStatus(scout.TaskId, scout.Scout, "execution")
+	taskCache.Tasks.PutTaskScoutStatus(scout.TaskId, taskKey, "execution")
+
+	if isTagTask {
+		taskCache.Tasks.UpdateTaskScoutKey(scout.TaskId, args.Tag, args.Scout, args.ScoutType)
+	}
 	reply.Code = 0
+	//}
+	//reply.Code = 0
 	return nil
 }
 
@@ -57,13 +99,25 @@ func (t *Scout) TaskResult(args *model.TaskResultRequest, reply *model.SimpleRpc
 		reply.Code = 1
 		return errors.New("Scout not exists")
 	}
-	ScoutAES := utils.AES_CBC_Decrypt(host.AES, utils.AESKey)
+	ScoutAES, err := utils.AES_CBC_Decrypt(host.AES, utils.AESKey)
+	if err != nil {
+		log.Print(err)
+		return errors.New("untrusted scout")
+	}
 	if args.Result != "" {
-		result := utils.AES_CBC_Decrypt(args.Result, string(ScoutAES))
+		result, err := utils.AES_CBC_Decrypt(args.Result, string(ScoutAES))
+		if err != nil {
+			log.Print(err)
+			return errors.New("untrusted scout")
+		}
 		taskCache.Tasks.PutTaskScoutResult(args.TaskId, args.Scout, string(result), false)
 	}
 	if args.Error != "" {
-		errorMsg := utils.AES_CBC_Decrypt(args.Error, string(ScoutAES))
+		errorMsg, err := utils.AES_CBC_Decrypt(args.Error, string(ScoutAES))
+		if err != nil {
+			log.Print(err)
+			return errors.New("untrusted scout")
+		}
 		taskCache.Tasks.PutTaskScoutResult(args.TaskId, args.Scout, string(errorMsg), true)
 	}
 

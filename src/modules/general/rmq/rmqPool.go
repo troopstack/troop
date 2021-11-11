@@ -277,7 +277,7 @@ func (S *Service) createChannel(connectId int) channel {
 		err := json.Unmarshal(message.Body, &taskMsg)
 		//log.Printf(" [%s] unreachable", message.RoutingKey)
 		if err == nil {
-			if taskMsg.Type == "task" || taskMsg.Type == "ping" || taskMsg.Type == "plugin" || taskMsg.Type == "fileManage" {
+			if taskMsg.Type == "task" || taskMsg.Type == "ping" || taskMsg.Type == "plugin" || taskMsg.Type == "fileManage" || taskMsg.Type == "bala_task" {
 				utils.TaskReturn(taskMsg, message.RoutingKey)
 			}
 		}
@@ -405,7 +405,7 @@ func (S *Service) dataForm(notice interface{}) string {
 	return string(body)
 }
 
-func (S *Service) publish(channelId int, ch *amqp.Channel, exchangeName string, routeKey string, data string) (err error) {
+func (S *Service) publish(channelId int, ch *amqp.Channel, exchangeName string, routeKey string, data string, priority uint8) (err error) {
 	err = ch.Publish(
 		exchangeName,
 		routeKey,
@@ -415,18 +415,19 @@ func (S *Service) publish(channelId int, ch *amqp.Channel, exchangeName string, 
 			DeliveryMode: amqp.Persistent,
 			ContentType:  "application/json",
 			Body:         []byte(data),
+			Priority:     priority,
 		})
 
 	if err != nil {
 		if strings.Index(err.Error(), "channel/connection is not open") >= 0 {
-			err = S.rePublish(channelId, exchangeName, err, routeKey, data)
+			err = S.rePublish(channelId, exchangeName, err, routeKey, data, priority)
 		}
 	}
 
 	return
 }
 
-func (S *Service) rePublish(channelId int, exchangeName string, errmsg error, routeKey string, data string) (err error) {
+func (S *Service) rePublish(channelId int, exchangeName string, errmsg error, routeKey string, data string, priority uint8) (err error) {
 
 	ch := S.reDeclareExchange(channelId, exchangeName, errmsg)
 	err = ch.Publish(
@@ -438,6 +439,7 @@ func (S *Service) rePublish(channelId int, exchangeName string, errmsg error, ro
 			DeliveryMode: amqp.Persistent,
 			ContentType:  "application/json",
 			Body:         []byte(data),
+			Priority:     priority,
 		})
 	return
 }
@@ -453,7 +455,7 @@ func (S *Service) backChannelId(channelId int, ch *amqp.Channel) {
 	return
 }
 
-func (S *Service) PutIntoQueue(exchangeName string, routeKey string, notice interface{}) (message interface{}, pubErr error) {
+func (S *Service) PutIntoQueue(exchangeName string, routeKey string, notice interface{}, priority uint8) (message interface{}, pubErr error) {
 	defer func() {
 		msg := recover()
 		if msg != nil {
@@ -486,7 +488,7 @@ func (S *Service) PutIntoQueue(exchangeName string, routeKey string, notice inte
 	data := S.dataForm(notice)
 	var tryTime = 1
 	for {
-		pubErr = S.publish(channelId, ch, exchangeName, routeKey, data)
+		pubErr = S.publish(channelId, ch, exchangeName, routeKey, data, priority)
 		if pubErr != nil {
 			if tryTime <= retryCount {
 				log.Printf("%s: %s", "Failed to publish a message, try again.", pubErr)

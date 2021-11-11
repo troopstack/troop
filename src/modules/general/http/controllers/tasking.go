@@ -106,13 +106,37 @@ func TaskPush(taskId string, scouts []*model.Host, TaskScouts taskCache.TaskScou
 		target := fmt.Sprintf("scout.%s.%s", scouts[i].Type, scouts[i].Hostname)
 
 		// 推送任务到目标scout
-		_, err := rmq.AmqpServer.PutIntoQueue("scout", target, ScoutMessage)
+		_, err := rmq.AmqpServer.PutIntoQueue("scout", target, ScoutMessage, 0)
 
 		if err != nil {
 			TaskScoutInfo.Error = "Task reception failed. Please check the connection status between general and rabbitMQ."
 			TaskScoutInfo.Status = "failed"
 			TaskScouts.TaskDone()
 		}
+	}
+}
+
+func BalaTaskPush(taskId string, tag string, TaskScouts taskCache.TaskScouts, ScoutMessage model.ScoutMessage, Priority uint8) {
+
+	TaskScoutInfo := model.TaskScoutInfo{
+		TaskId: taskId,
+		Tag:    tag,
+		Result: "",
+		Error:  "",
+		Status: "wait",
+	}
+
+	taskCache.Tasks.CreateBalaTaskScout(&TaskScoutInfo)
+
+	target := fmt.Sprintf("scout.tag.%s", tag)
+
+	// 推送任务到目标scout
+	_, err := rmq.AmqpServer.PutIntoQueue("scout", target, ScoutMessage, Priority)
+
+	if err != nil {
+		TaskScoutInfo.Error = "Task reception failed. Please check the connection status between general and rabbitMQ."
+		TaskScoutInfo.Status = "failed"
+		TaskScouts.TaskDone()
 	}
 }
 

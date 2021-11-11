@@ -4,6 +4,7 @@ type TaskScoutInfo struct {
 	TaskId    string
 	Scout     string
 	ScoutType string
+	Tag       string
 	Result    string
 	Error     string
 	Status    string
@@ -11,6 +12,7 @@ type TaskScoutInfo struct {
 
 type TaskResultRequest struct {
 	TaskId    string
+	Tag       string
 	Scout     string
 	ScoutType string
 	Result    string
@@ -22,6 +24,7 @@ type TaskAcceptRequest struct {
 	TaskId    string
 	Scout     string
 	ScoutType string
+	Tag       string
 }
 
 type Env struct {

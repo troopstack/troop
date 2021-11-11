@@ -9,11 +9,20 @@ import (
 	"github.com/troopstack/troop/src/modules/scout/rpc"
 	"github.com/troopstack/troop/src/modules/scout/run"
 	"github.com/troopstack/troop/src/modules/scout/utils"
+
+	"github.com/streadway/amqp"
 )
 
-func MessageProcess(body []byte) {
+func MessageProcess(d amqp.Delivery, autoAck bool) {
+	body := d.Body
 	ScoutMessage := model.ScoutMessage{}
 	err := json.Unmarshal(body, &ScoutMessage)
+	if !autoAck {
+		defer func() {
+			err = d.Ack(false)
+			failOnError(err, "Rabbitmq ack failed")
+		}()
+	}
 	if err != nil {
 		log.Print(err.Error())
 		return
@@ -37,10 +46,13 @@ func MessageProcess(body []byte) {
 			return
 		}
 		// 使用General的AES解密
-		data := utils.AES_CBC_Decrypt(string(ScoutMessage.Data), utils.GeneralAES)
-
+		data, err := utils.AES_CBC_Decrypt(string(ScoutMessage.Data), utils.GeneralAES)
+		if err != nil {
+			log.Print(err.Error())
+			return
+		}
 		ScoutTaskRequest := model.ScoutTaskRequest{}
-		err := json.Unmarshal(data, &ScoutTaskRequest)
+		err = json.Unmarshal(data, &ScoutTaskRequest)
 		if err != nil {
 			log.Print(err.Error())
 			return
@@ -100,10 +112,14 @@ func MessageProcess(body []byte) {
 			return
 		}
 		// 使用General的AES解密
-		data := utils.AES_CBC_Decrypt(string(ScoutMessage.Data), utils.GeneralAES)
+		data, err := utils.AES_CBC_Decrypt(string(ScoutMessage.Data), utils.GeneralAES)
+		if err != nil {
+			log.Print(err.Error())
+			return
+		}
 
 		ScoutTaskRequest := model.ScoutPingRequest{}
-		err := json.Unmarshal(data, &ScoutTaskRequest)
+		err = json.Unmarshal(data, &ScoutTaskRequest)
 		if err != nil {
 			log.Print(err.Error())
 			return
@@ -132,10 +148,14 @@ func MessageProcess(body []byte) {
 			return
 		}
 		// 使用General的AES解密
-		data := utils.AES_CBC_Decrypt(string(ScoutMessage.Data), utils.GeneralAES)
+		data, err := utils.AES_CBC_Decrypt(string(ScoutMessage.Data), utils.GeneralAES)
+		if err != nil {
+			log.Print(err.Error())
+			return
+		}
 
 		ScoutTaskRequest := model.ScoutFileRequest{}
-		err := json.Unmarshal(data, &ScoutTaskRequest)
+		err = json.Unmarshal(data, &ScoutTaskRequest)
 		if err != nil {
 			log.Print(err.Error())
 			return
@@ -167,10 +187,14 @@ func MessageProcess(body []byte) {
 			return
 		}
 		// 使用General的AES解密
-		data := utils.AES_CBC_Decrypt(string(ScoutMessage.Data), utils.GeneralAES)
+		data, err := utils.AES_CBC_Decrypt(string(ScoutMessage.Data), utils.GeneralAES)
+		if err != nil {
+			log.Print(err.Error())
+			return
+		}
 
 		ScoutPluginRequest := model.ScoutPluginRequest{}
-		err := json.Unmarshal(data, &ScoutPluginRequest)
+		err = json.Unmarshal(data, &ScoutPluginRequest)
 		if err != nil {
 			log.Print(err.Error())
 			return
@@ -224,10 +248,14 @@ func MessageProcess(body []byte) {
 			return
 		}
 		// 使用General的AES解密
-		data := utils.AES_CBC_Decrypt(string(ScoutMessage.Data), utils.GeneralAES)
+		data, err := utils.AES_CBC_Decrypt(string(ScoutMessage.Data), utils.GeneralAES)
+		if err != nil {
+			log.Print(err.Error())
+			return
+		}
 
 		ScoutTaskRequest := model.FileManageTaskRequest{}
-		err := json.Unmarshal(data, &ScoutTaskRequest)
+		err = json.Unmarshal(data, &ScoutTaskRequest)
 		if err != nil {
 			log.Print(err.Error())
 			return
@@ -275,6 +303,68 @@ func MessageProcess(body []byte) {
 				TaskResultRequest.Result = utils.AES_CBC_Encrypt(resultData, utils.AES)
 			}
 			rpc.SendResult(TaskResultRequest)
+		}
+	} else if ScoutMessage.Type == "bala_task" {
+		if utils.GeneralAES == "" {
+			return
+		}
+		// 使用General的AES解密
+		data, err := utils.AES_CBC_Decrypt(string(ScoutMessage.Data), utils.GeneralAES)
+		if err != nil {
+			log.Print(err.Error())
+			return
+		}
+
+		ScoutPluginRequest := model.ScoutPluginRequest{}
+		err = json.Unmarshal(data, &ScoutPluginRequest)
+		if err != nil {
+			log.Print(err.Error())
+			return
+		}
+		if ScoutPluginRequest.TaskId != "" {
+			hostname, err := utils.Hostname()
+			if err != nil {
+				hostname = fmt.Sprintf("error:%s", err.Error())
+				log.Print(err.Error())
+				return
+			}
+			// 接收消息
+			TaskAcceptRequest := model.TaskAcceptRequest{
+				TaskId:    ScoutPluginRequest.TaskId,
+				Scout:     hostname,
+				ScoutType: "server",
+				Tag:       ScoutMessage.Tag,
+			}
+			acceptAck := rpc.SendTaskAccept(TaskAcceptRequest)
+			if !acceptAck {
+				log.Println("send plugin job receive message error: ", TaskAcceptRequest)
+				return
+			}
+			log.Printf("receive plugin job. TaskId: %s, Action: %s", ScoutPluginRequest.TaskId,
+				ScoutPluginRequest.Action)
+			var result string
+
+			result, err = run.PluginAction(ScoutPluginRequest)
+
+			resCipher := utils.AES_CBC_Encrypt([]byte(result), utils.AES)
+
+			TaskResultRequest := model.TaskResultRequest{
+				TaskId:    ScoutPluginRequest.TaskId,
+				Scout:     hostname,
+				ScoutType: "server",
+				Result:    resCipher,
+				Complete:  true,
+			}
+
+			if err != nil {
+				errorCipher := utils.AES_CBC_Encrypt([]byte(err.Error()), utils.AES)
+				TaskResultRequest.Error = errorCipher
+			}
+
+			rpc.SendResult(TaskResultRequest)
+
+		} else {
+			run.PluginAction(ScoutPluginRequest)
 		}
 	} else {
 		log.Print(ScoutMessage)

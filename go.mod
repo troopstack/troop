@@ -2,8 +2,6 @@ module troop
 
 go 1.13
 
-replace github.com/troopstack/troop => ./
-
 require (
 	github.com/DeanThompson/ginpprof v0.0.0-20190408063150-3be636683586
 	github.com/axgle/mahonia v0.0.0-20180208002826-3358181d7394
@@ -20,3 +18,5 @@ require (
 	github.com/troopstack/troop v0.0.0-00010101000000-000000000000
 	gopkg.in/ini.v1 v1.57.0
 )
+
+replace github.com/troopstack/troop => ./

@@ -20,7 +20,7 @@ func SendUpdatePluginMessage() {
 		Type: "plugin",
 		Data: []byte(utils.AES_CBC_Encrypt(data, utils.AES)),
 	}
-	_, err = rmq.AmqpServer.PutIntoQueue("scout", "scout", ScoutMessage)
+	_, err = rmq.AmqpServer.PutIntoQueue("scout", "scout", ScoutMessage, 0)
 
 	if err != nil {
 		log.Printf("send update plugin message error: %s", err)

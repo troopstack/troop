@@ -231,6 +231,7 @@ func DownloadPlugin(cover bool, plugin string) string {
 			} else {
 				successLog := fmt.Sprintf("version: %s -> %s",
 					formatVersionNum(currentVersion), formatVersionNum(pluginVersion))
+				log.Printf("%s %s", pluginName, successLog)
 				pluginUpdateResults = append(pluginUpdateResults,
 					fmt.Sprintln(pluginName, successLog))
 				if writeConfigPlugin != "" && pluginName != "scout_manager" {
@@ -270,6 +271,27 @@ func download(pluginName, url string) error {
 	}
 
 	fileP := path.Join(pluginDir, file.Basename(url))
+
+	fileExists := utils.IsFile(fileP)
+
+	if fileExists && runtime.GOOS == "windows" {
+		pluginNameLite := strings.Split(file.Basename(url), ".")
+		waitRemovePluginName := fmt.Sprintf("%s_wait_delete.exe", pluginNameLite[0])
+		waitRemoveFileP := path.Join(pluginDir, waitRemovePluginName)
+		exists := utils.IsFile(waitRemoveFileP)
+		if exists {
+			errRemove := os.Remove(waitRemoveFileP)
+			if errRemove != nil {
+				fmt.Printf("the last update is not over, please try again later. error: %s", errRemove.Error())
+				return errRemove
+			}
+		}
+		errRename := os.Rename(fileP, waitRemoveFileP)
+		if errRename != nil {
+			fmt.Print(errRename.Error())
+			return errRename
+		}
+	}
 
 	f, err := os.OpenFile(fileP, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
 	if err != nil {
