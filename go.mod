@@ -7,7 +7,7 @@ require (
 	github.com/axgle/mahonia v0.0.0-20180208002826-3358181d7394
 	github.com/chenhg5/collection v0.0.0-20191118032303-cb21bccce4c3
 	github.com/fatih/color v1.9.0
-	github.com/gin-gonic/gin v1.6.3
+	github.com/gin-gonic/gin v1.7.0
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/jinzhu/gorm v1.9.14
 	github.com/mitchellh/mapstructure v1.3.2

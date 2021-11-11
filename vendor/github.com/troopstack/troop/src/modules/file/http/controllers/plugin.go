@@ -3,7 +3,6 @@ package controllers
 import (
 	"io/ioutil"
 	"net/http"
-	"os"
 	"path"
 
 	"github.com/troopstack/troop/src/modules/file/utils"
@@ -41,7 +40,7 @@ func PluginUpload(c *gin.Context) {
 	}
 
 	pluginTarFile := path.Join(utils.FileRoot, t.FileName)
-	err = ioutil.WriteFile(pluginTarFile, t.File, os.ModeAppend)
+	err = ioutil.WriteFile(pluginTarFile, t.File, 0600)
 
 	if err != nil {
 		utils.FailOnError(err, "File write failed")

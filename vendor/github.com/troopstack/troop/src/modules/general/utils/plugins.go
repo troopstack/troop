@@ -33,7 +33,7 @@ func download() error {
 
 	if file.IsExist(pluginDirFile) {
 		// git pull
-		cmd := exec.Command("git", "pull")
+		cmd := exec.Command("git", "pull", "--ff-only")
 		cmd.Dir = pluginDirFile
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()

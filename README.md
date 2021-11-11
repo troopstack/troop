@@ -1,15 +1,13 @@
 <img src="https://github.com/troopstack/troop/raw/master/assets/troop.png" width="200">
 <br>
+Troop is an operation and maintenance automation infrastructure, a server centralized management system.
 
-Troop是由Golang编写的运维自动化底层基础设施，一套完整的服务器集中化管理系统。
+## Documentations
+- [Getting Started](https://github.com/kurolz/troop-service)
+- [Troop API](https://troop.docs.apiary.io/)
+- [Architecture](https://www.processon.com/view/link/5dc23dace4b04913a28be048)
 
-## 文档
-- [安装](https://troop.docs.apiary.io/)
-- [快速上手](https://troop.docs.apiary.io/)
-- [API文档](https://troop.docs.apiary.io/)
-- [基础架构图](https://www.processon.com/view/link/5dc23dace4b04913a28be048)
-
-## 编译
+## Build from source
 
 ```bash
 git clone https://github.com/troopstack/troop
@@ -17,12 +15,12 @@ cd troop
 ./control build
 ```
 
-## 贡献者们
+## Contributors
 
-[KurolZ](https://github.com/kurolz)
+<a href="https://github.com/troopstack/troop/contributors"><img src="https://opencollective.com/troop/contributors.svg?button=false" /></a>
 
 ## License
 
 <img alt="Apache-2.0 license" src="https://s3-gz01.didistatic.com/n9e-pub/image/apache.jpeg" width="128">
 
-Troop 基于 Apache-2.0 许可证进行分发和使用，更多信息参见 [LICENSE](LICENSE)。
+Troop is released under the Apache 2.0 license. See [LICENSE](LICENSE)。

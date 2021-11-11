@@ -75,7 +75,7 @@ type ScoutResult struct {
 }
 
 func scoutList() error {
-	url := utils.Config().General.Addresses + "/hosts"
+	url := utils.Config().General.Addresses + "/hosts/all"
 	req, _ := http.NewRequest("GET", url, nil)
 	req = utils.HttpHandler(req)
 	res, err := http.DefaultClient.Do(req)
@@ -95,10 +95,6 @@ func scoutList() error {
 		scoutKeys := ScoutResult.Result
 		color.HiGreen("[Accepted Scouts (%d)]", len(scoutKeys.Accepted))
 		for i := range scoutKeys.Accepted {
-			//color.Cyan(fmt.Sprintf("%s [Version: %s] [OS: %s] [IP: %s] [Plugins: %s]",
-			//	scoutKeys.Accepted[i].Hostname, scoutKeys.Accepted[i].ScoutVersion,
-			//	scoutKeys.Accepted[i].Os, scoutKeys.Accepted[i].Ip,
-			//	scoutKeys.Accepted[i].Plugins))
 			a := color.CyanString(scoutKeys.Accepted[i].Hostname)
 			b := color.GreenString(fmt.Sprintf("[Version: %s] [OS: %s] [IP: %s] [Plugins: %s]",
 				scoutKeys.Accepted[i].ScoutVersion,
@@ -107,13 +103,13 @@ func scoutList() error {
 			fmt.Fprintf(color.Output, "%s ", a)
 			fmt.Fprintln(color.Output, b)
 		}
-		color.HiRed("[Unaccepted Scouts (%d)]", len(scoutKeys.Unaccepted))
+		color.HiYellow("[Unaccepted Scouts (%d)]", len(scoutKeys.Unaccepted))
 		for i := range scoutKeys.Unaccepted {
-			color.Red(scoutKeys.Unaccepted[i])
+			color.Yellow(scoutKeys.Unaccepted[i])
 		}
-		color.HiBlue("[Denied Scouts (%d)]", len(scoutKeys.Denied))
+		color.HiRed("[Denied Scouts (%d)]", len(scoutKeys.Denied))
 		for i := range scoutKeys.Denied {
-			color.Blue(scoutKeys.Denied[i])
+			color.Red(scoutKeys.Denied[i])
 		}
 	}
 	return nil

@@ -32,6 +32,7 @@ func InitRouter() http.Handler {
 
 	router.GET("/task", controllers.TaskInfo)
 	router.GET("/hosts", controllers.HostList)
+	router.GET("/hosts/all", controllers.AllHostList)
 	router.GET("/host/keys", controllers.HostKeyList)
 
 	router.POST("/host/accept", controllers.AcceptHost)
