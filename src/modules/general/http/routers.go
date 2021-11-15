@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/troopstack/troop/src/modules/general/http/controllers"
+	"github.com/troopstack/troop/src/modules/general/http/controllers/plugin"
 	"github.com/troopstack/troop/src/modules/general/utils"
 
 	"github.com/DeanThompson/ginpprof"
@@ -27,12 +28,15 @@ func InitRouter() http.Handler {
 	router.POST("/ping", controllers.Ping)
 	router.POST("/file", controllers.FileSend)
 	router.POST("/tasks", controllers.Tasks)
-	router.POST("/plugin", controllers.PluginJob)
-	router.POST("/plugin_pull", controllers.PluginPull)
+
+	router.GET("/plugin", plugin.PluginList)
+	router.POST("/plugin/job", plugin.PluginJob)
+	router.POST("/plugin/pull", plugin.PluginPull)
 
 	router.GET("/task", controllers.TaskInfo)
 	router.GET("/hosts", controllers.HostList)
 	router.GET("/hosts/all", controllers.AllHostList)
+	router.GET("/host/detail/:hostname", controllers.HostDetail)
 	router.GET("/host/keys", controllers.HostKeyList)
 
 	router.POST("/host/accept", controllers.AcceptHost)
