@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/toolkits/file"
@@ -30,7 +31,7 @@ var (
 )
 
 func download() error {
-
+	// 从Git拉取插件
 	if file.IsExist(pluginDirFile) {
 		// git pull
 		cmd := exec.Command("git", "pull", "--ff-only")
@@ -56,6 +57,7 @@ func download() error {
 }
 
 func sendToFileSystem(pluginsDirName string) error {
+	// 推送插件到File服务
 	fileServerUrl := Config().File.Address + "/plugin/upload"
 
 	existed := isDir(pluginDirFile)
@@ -115,6 +117,7 @@ func sendToFileSystem(pluginsDirName string) error {
 }
 
 func InitPlugins() {
+	// 初始化插件
 	if Config().Plugin.Enabled {
 		dir := "plugins"
 		parentDir := path.Join(Root, dir)
@@ -153,48 +156,91 @@ func InitPlugins() {
 				if pluDir.Name() == ".git" {
 					continue
 				}
-				pluginInfo := make(map[string]interface{})
+				pluginInfo := make(map[string]map[string]interface{})
 				pluginInfo["windows"] = make(map[string]interface{})
 				pluginInfo["linux"] = make(map[string]interface{})
 				if pluDir.IsDir() {
-					winDir := path.Join(pluginDirFile, pluDir.Name(), "windows")
-					if isDir(winDir) {
-						winVersions, err := ioutil.ReadDir(winDir)
-						if err != nil {
-							FailOnError(err, winDir+" dir failed")
+					vDir := path.Join(pluginDirFile, pluDir.Name())
+					if isDir(vDir) {
+						pluginFiles, readPluginDirErr := ioutil.ReadDir(vDir)
+						if readPluginDirErr != nil {
+							FailOnError(readPluginDirErr, vDir+" dir failed")
 							continue
 						}
-						pluginWinVersionInfo := make(map[string]interface{})
-						for _, winVersionDir := range winVersions {
-							pluExecFile := path.Join(winDir, winVersionDir.Name(), pluDir.Name()+".exe")
-							if IsFile(pluExecFile) {
-								pluginWinInfo := make(map[string]interface{})
-								pluginWinInfo["url"] = Config().File.Address + path.Join("/file/download", pluginFMUrl,
-									pluDir.Name(), "windows", winVersionDir.Name(), pluDir.Name()+".exe")
-								pluginWinVersionInfo[winVersionDir.Name()] = pluginWinInfo
+
+						for _, d := range pluginFiles {
+							if IsFile(path.Join(vDir, d.Name())) {
+								// 文件名
+								fileName := d.Name()
+								// 文件名结尾
+								fileSuffix := path.Ext(fileName)
+								// 文件名前缀
+								fileNameOnly := fileName
+								// 判断文件名结尾是否为数字，如果为数字，则为版本号，后缀为空
+								_, nErr := strconv.Atoi(strings.Replace(fileSuffix, ".", "", 1))
+								if nErr != nil {
+									fileNameOnly = strings.TrimSuffix(fileNameOnly, fileSuffix)
+								}
+								// 用`-`分割文件名，文件名格式为`[pluginName]-[os]-[version].[suffix]`，suffix为可选
+								fnMap := strings.Split(fileNameOnly, "-")
+								if len(fnMap) >= 3 {
+									pOs := fnMap[1]
+									if pOs == "win" {
+										pOs = "windows"
+									}
+									version := fnMap[2]
+									pluginInfoMap := make(map[string]interface{})
+									// 文件下载路径
+									pluginInfoMap["url"] = Config().File.Address + path.Join("/file/download",
+										pluginFMUrl, pluDir.Name(), fileName)
+									pluginInfo[pOs][version] = pluginInfoMap
+
+								} else {
+									FailOnError(err, fileName+" file name format error")
+									continue
+								}
 							}
 						}
-						pluginInfo["windows"] = pluginWinVersionInfo
 					}
-					linuxDir := path.Join(pluginDirFile, pluDir.Name(), "linux")
-					if isDir(linuxDir) {
-						linuxVersions, err := ioutil.ReadDir(linuxDir)
-						if err != nil {
-							FailOnError(err, linuxDir+" dir failed")
-							continue
-						}
-						pluginLinuxVersionInfo := make(map[string]interface{})
-						for _, LinuxVersionDir := range linuxVersions {
-							pluExecFile := path.Join(linuxDir, LinuxVersionDir.Name(), pluDir.Name())
-							if IsFile(pluExecFile) {
-								pluginLinuxInfo := make(map[string]interface{})
-								pluginLinuxInfo["url"] = Config().File.Address + path.Join("/file/download", pluginFMUrl,
-									pluDir.Name(), "linux", LinuxVersionDir.Name(), pluDir.Name())
-								pluginLinuxVersionInfo[LinuxVersionDir.Name()] = pluginLinuxInfo
-							}
-						}
-						pluginInfo["linux"] = pluginLinuxVersionInfo
-					}
+
+					//winDir := path.Join(pluginDirFile, pluDir.Name(), "windows")
+					//if isDir(winDir) {
+					//	winVersions, err := ioutil.ReadDir(winDir)
+					//	if err != nil {
+					//		FailOnError(err, winDir+" dir failed")
+					//		continue
+					//	}
+					//	pluginWinVersionInfo := make(map[string]interface{})
+					//	for _, winVersionDir := range winVersions {
+					//		pluExecFile := path.Join(winDir, winVersionDir.Name(), pluDir.Name()+".exe")
+					//		if IsFile(pluExecFile) {
+					//			pluginWinInfo := make(map[string]interface{})
+					//			pluginWinInfo["url"] = Config().File.Address + path.Join("/file/download", pluginFMUrl,
+					//				pluDir.Name(), "windows", winVersionDir.Name(), pluDir.Name()+".exe")
+					//			pluginWinVersionInfo[winVersionDir.Name()] = pluginWinInfo
+					//		}
+					//	}
+					//	pluginInfo["windows"] = pluginWinVersionInfo
+					//}
+					//linuxDir := path.Join(pluginDirFile, pluDir.Name(), "linux")
+					//if isDir(linuxDir) {
+					//	linuxVersions, err := ioutil.ReadDir(linuxDir)
+					//	if err != nil {
+					//		FailOnError(err, linuxDir+" dir failed")
+					//		continue
+					//	}
+					//	pluginLinuxVersionInfo := make(map[string]interface{})
+					//	for _, LinuxVersionDir := range linuxVersions {
+					//		pluExecFile := path.Join(linuxDir, LinuxVersionDir.Name(), pluDir.Name())
+					//		if IsFile(pluExecFile) {
+					//			pluginLinuxInfo := make(map[string]interface{})
+					//			pluginLinuxInfo["url"] = Config().File.Address + path.Join("/file/download", pluginFMUrl,
+					//				pluDir.Name(), "linux", LinuxVersionDir.Name(), pluDir.Name())
+					//			pluginLinuxVersionInfo[LinuxVersionDir.Name()] = pluginLinuxInfo
+					//		}
+					//	}
+					//	pluginInfo["linux"] = pluginLinuxVersionInfo
+					//}
 					plugins[pluDir.Name()] = pluginInfo
 				}
 			}
