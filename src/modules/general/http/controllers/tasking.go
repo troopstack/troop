@@ -90,7 +90,7 @@ func TaskSave(taskId string, detach bool, scouts []*model.Host) (TaskScouts task
 	return
 }
 
-func TaskPush(taskId string, scouts []*model.Host, TaskScouts taskCache.TaskScouts, ScoutMessage model.ScoutMessage) {
+func TaskPush(taskId string, scouts []*model.Host, TaskScouts *taskCache.TaskScouts, ScoutMessage model.ScoutMessage) {
 
 	for i := range scouts {
 		TaskScoutInfo := model.TaskScoutInfo{
@@ -116,7 +116,7 @@ func TaskPush(taskId string, scouts []*model.Host, TaskScouts taskCache.TaskScou
 	}
 }
 
-func BalaTaskPush(taskId string, tag string, TaskScouts taskCache.TaskScouts, ScoutMessage model.ScoutMessage, Priority uint8) {
+func BalaTaskPush(taskId string, tag string, TaskScouts *taskCache.TaskScouts, ScoutMessage model.ScoutMessage, Priority uint8) {
 
 	TaskScoutInfo := model.TaskScoutInfo{
 		TaskId: taskId,

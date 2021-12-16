@@ -96,8 +96,9 @@ func OrderRunStart(name string, envs []model.Env, dir string, arg ...string) (Ru
 	} else {
 		RunResult.Stdout = string(stdout)
 	}
-
-	log.Printf(fmt.Sprintf("Stdin: %s, Stdout: %s\n", cmd.Args, RunResult.Stdout))
+	if utils.Config().Debug.Enabled {
+		log.Printf(fmt.Sprintf("Stdin: %s, Stdout: %s\n", cmd.Args, RunResult.Stdout))
+	}
 
 	if err != nil {
 		res := fmt.Sprintf("Stderr: %s\n", err)
