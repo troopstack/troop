@@ -51,7 +51,7 @@ func pluginUpdate(c *cobra.Command, args []string) error {
 		return errors.New("error: missing target parameters")
 	}
 
-	pingUrl := utils.Config().General.Addresses + "/plugin"
+	pingUrl := utils.Config().General.Addresses + "/plugin/job"
 
 	target, err := TargetParse(args[0])
 	if err != nil {

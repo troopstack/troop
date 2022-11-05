@@ -162,7 +162,6 @@ func TaskResult(taskId string, detach bool, timeout int, h gin.H) gin.H {
 				}
 			}
 		} else {
-
 		loop:
 			for {
 				select {

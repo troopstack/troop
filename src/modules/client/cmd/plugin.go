@@ -48,7 +48,7 @@ func init() {
 
 func plugin(c *cobra.Command, args []string) error {
 
-	pingUrl := utils.Config().General.Addresses + "/plugin"
+	pingUrl := utils.Config().General.Addresses + "/plugin/job"
 
 	target, err := TargetParse(args[0])
 	if err != nil {
