@@ -23,7 +23,7 @@ troop plugin.pull
 }
 
 func pluginPull(c *cobra.Command, args []string) error {
-	url := utils.Config().General.Addresses + "/plugin_pull"
+	url := utils.Config().General.Addresses + "/plugin/pull"
 
 	data := make(map[string]interface{})
 

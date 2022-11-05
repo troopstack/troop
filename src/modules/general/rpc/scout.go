@@ -43,7 +43,7 @@ func (t *Scout) Handshake(args *model.ScoutHandRequest, reply *model.ScoutHandRe
 		Type:         args.Type,
 		PubKey:       args.PubKey,
 		Status:       status,
-		AES:          string(aesCi),
+		AES:          aesCi,
 		OS:           args.OS,
 		Tags:         args.Tags,
 		Plugins:      args.Plugins,
@@ -57,10 +57,10 @@ func (t *Scout) Handshake(args *model.ScoutHandRequest, reply *model.ScoutHandRe
 			return err
 		}
 		if utils.Config().Scout.AutoAccept {
-			data, err := scout.AcceptScout(ScoutInfo)
-			if err != nil {
-				log.Print(err)
-				return err
+			data, aptErr := scout.AcceptScout(ScoutInfo)
+			if aptErr != nil {
+				log.Print(aptErr)
+				return aptErr
 			}
 			reply.Data = data
 			reply.Plugins = utils.Plugins
@@ -72,7 +72,7 @@ func (t *Scout) Handshake(args *model.ScoutHandRequest, reply *model.ScoutHandRe
 		ScoutPubKey, is_have := utils.ReadScoutPubKey(args.Hostname)
 		if is_have {
 			// 存在该Scout的公钥
-			if string(ScoutPubKey) == args.PubKey {
+			if ScoutPubKey == args.PubKey {
 				// 公钥未改变
 				data, err := scout.AcceptScout(ScoutInfo)
 				if err != nil {

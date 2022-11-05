@@ -44,6 +44,25 @@ func HostList(c *gin.Context) {
 	return
 }
 
+func HostDetail(c *gin.Context) {
+	h := gin.H{
+		"result": nil,
+		"error":  "",
+		"code":   0,
+	}
+
+	host, have := database.IsExistScout(c.Param("hostname"))
+	if have {
+		h["result"] = host
+	} else {
+		h["error"] = "主机不存在"
+		h["code"] = 1
+	}
+
+	c.JSON(http.StatusOK, h)
+	return
+}
+
 type AllHosts struct {
 	Accepted   []*model.Host
 	Unaccepted []string
