@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/troopstack/troop/src/model"
@@ -270,7 +271,17 @@ func download(pluginName, url string) error {
 		return err
 	}
 
-	fileP := path.Join(pluginDir, file.Basename(url))
+	fileName := strings.Split(file.Basename(url), "-")[0]
+
+	fileSuffix := path.Ext(file.Basename(url))
+
+	// 判断文件名结尾是否为数字，如果为数字，则为版本号，后缀为空
+	_, nErr := strconv.Atoi(strings.Replace(fileSuffix, ".", "", 1))
+	if nErr != nil {
+		fileName = fileName + fileSuffix
+	}
+
+	fileP := path.Join(pluginDir, fileName)
 
 	fileExists := utils.IsFile(fileP)
 
