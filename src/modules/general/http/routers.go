@@ -14,6 +14,7 @@ import (
 
 func InitRouter() http.Handler {
 	router := gin.New()
+	router.Use(gin.Logger())
 
 	if !utils.Config().Debug.Enabled {
 		gin.SetMode(gin.ReleaseMode)

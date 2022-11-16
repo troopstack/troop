@@ -62,7 +62,7 @@ func Tasks(c *gin.Context) {
 	TaskScouts := TaskSave(taskId, t.Detach, scouts)
 
 	// 任务推送
-	TaskPush(taskId, scouts, TaskScouts, ScoutMessage)
+	TaskPush(taskId, scouts, &TaskScouts, ScoutMessage)
 
 	// 获取结果
 	h = TaskResult(taskId, t.Detach, t.Timeout, h)

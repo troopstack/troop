@@ -88,7 +88,7 @@ func BalaTasks(c *gin.Context) {
 
 	priority := uint8(t.Priority)
 	// 任务推送
-	BalaTaskPush(taskId, t.Tag, TaskScouts, ScoutMessage, priority)
+	BalaTaskPush(taskId, t.Tag, &TaskScouts, ScoutMessage, priority)
 
 	// 获取结果
 	h = TaskResult(taskId, t.Detach, t.Timeout, h)

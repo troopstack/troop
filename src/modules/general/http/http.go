@@ -7,14 +7,9 @@ import (
 	"strings"
 
 	"github.com/troopstack/troop/src/modules/general/utils"
-
-	"github.com/gin-gonic/gin"
 )
 
 func Start() {
-	if !utils.Config().Debug.Enabled {
-		gin.SetMode(gin.ReleaseMode)
-	}
 	addr := utils.Config().Http.Listen
 
 	if addr == "" {
