@@ -438,7 +438,7 @@ Troop是基于Golang编写的运维自动化底层基础设施，一套完整的
 
 ## 插件任务 [//]
 
-### 插件任务推送 [POST /plugin]
+### 插件任务推送 [POST /plugin/job]
 
 + Request (application/json)
 
@@ -483,7 +483,7 @@ Troop是基于Golang编写的运维自动化底层基础设施，一套完整的
                 "task_id": "Z74ezoDS2OqwKqVHmM2Y4fsfKOOjOexw"
             }
 
-### 通过插件更新Scout [POST /plugin]
+### 通过插件更新Scout [POST /plugin/job]
 
 + Request (application/json)
 
@@ -527,7 +527,7 @@ Troop是基于Golang编写的运维自动化底层基础设施，一套完整的
             }
 
 
-### 通知General拉取新插件 [POST /plugin_pull]
+### 通知General拉取新插件 [POST /plugin/pull]
 
 + Request (application/json)
 
