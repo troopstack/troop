@@ -11,6 +11,7 @@ require (
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/jinzhu/gorm v1.9.14
 	github.com/mitchellh/mapstructure v1.3.2
+	github.com/smartystreets/goconvey v1.7.2 // indirect
 	github.com/spf13/cobra v1.0.0
 	github.com/streadway/amqp v1.0.0
 	github.com/toolkits/file v0.0.0-20160325033739-a5b3c5147e07

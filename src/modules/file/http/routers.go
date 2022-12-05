@@ -22,7 +22,7 @@ func InitRouter() http.Handler {
 	}
 
 	// 校验Token中间件
-	//router.Use(tokenVerify())
+	router.Use(tokenVerify())
 
 	router.POST("/file/upload", controllers.FileUpload)
 	router.POST("/file/remove", controllers.FileRemove)
