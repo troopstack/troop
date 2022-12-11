@@ -106,21 +106,21 @@ type AllHostKeys struct {
 }
 
 func HostKeyList(c *gin.Context) {
-	AllHostKeys := AllHostKeys{}
+	allHostKeys := AllHostKeys{}
 	hosts := []*model.Host{}
 	database.DBConn().Preload("Tags").Find(&hosts)
 	for i := range hosts {
-		AllHostKeys.Accepted = append(AllHostKeys.Accepted, hosts[i].Hostname)
+		allHostKeys.Accepted = append(allHostKeys.Accepted, hosts[i].Hostname)
 	}
 	CacheHosts := cache.Scouts.All()
 	for i := range CacheHosts {
 		if CacheHosts[i].Status == "unaccepted" {
-			AllHostKeys.Unaccepted = append(AllHostKeys.Unaccepted, CacheHosts[i].Hostname)
+			allHostKeys.Unaccepted = append(allHostKeys.Unaccepted, CacheHosts[i].Hostname)
 		} else if CacheHosts[i].Status == "denied" {
-			AllHostKeys.Denied = append(AllHostKeys.Denied, CacheHosts[i].Hostname)
+			allHostKeys.Denied = append(allHostKeys.Denied, CacheHosts[i].Hostname)
 		}
 	}
-	c.JSON(http.StatusOK, AllHostKeys)
+	c.JSON(http.StatusOK, allHostKeys)
 	return
 }
 
