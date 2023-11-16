@@ -27,7 +27,7 @@ func isDir(dir string) bool {
 // 如果目录不存在则创建
 func CreateDir(dir string) error {
 	if !isDir(dir) {
-		err := os.MkdirAll(dir, 0666)
+		err := os.MkdirAll(dir, 0766)
 		FailOnError(err, "")
 		return err
 	}

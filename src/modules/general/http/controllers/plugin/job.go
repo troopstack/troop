@@ -171,10 +171,10 @@ func PluginJob(c *gin.Context) {
 
 	if t.Action == "config.update" {
 		// 协程等待文件下发完毕之后让FM清理缓存文件
-		go utils.RemoveFMFile(TaskScouts, taskId)
+		go utils.RemoveFMFile(taskId)
 	}
 	// 任务推送
-	controllers.TaskPush(taskId, scouts, TaskScouts, ScoutMessage)
+	controllers.TaskPush(taskId, scouts, &TaskScouts, ScoutMessage)
 
 	// 获取结果
 	h = controllers.TaskResult(taskId, t.Detach, t.Timeout, h)

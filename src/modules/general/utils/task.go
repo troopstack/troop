@@ -48,10 +48,17 @@ func TaskReturn(message model.ScoutMessage, routerKey string) {
 }
 
 // 让FM清理缓存文件
-func RemoveFMFile(taskScout taskCache.TaskScouts, taskId string) {
+func RemoveFMFile(taskId string) {
+	task, exists := taskCache.Tasks.GetTask(taskId)
+
+	if !exists {
+		log.Println("remove file failed. task id:", taskId, "not exists.")
+		return
+	}
+
 	fileRemoveUrl := Config().File.Address + "/file/remove"
 
-	taskScout.Wg.Wait()
+	task.Wg.Wait()
 	data := make(map[string]interface{})
 	data["task_id"] = taskId
 	bytesData, _ := json.Marshal(data)

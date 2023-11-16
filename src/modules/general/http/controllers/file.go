@@ -4,12 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"os"
-
 	"github.com/troopstack/troop/src/model"
 	"github.com/troopstack/troop/src/modules/general/utils"
+	"io/ioutil"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -31,14 +29,6 @@ func FileSend(c *gin.Context) {
 	// 校验数据
 	if err := c.ShouldBindJSON(&t); err != nil {
 		h["error"] = err.Error()
-		h["code"] = 1
-		c.JSON(http.StatusBadRequest, h)
-		return
-	}
-
-	err := ioutil.WriteFile(t.FileName, t.File, os.ModeAppend)
-	if err != nil {
-		h["error"] = "Error: File write failed."
 		h["code"] = 1
 		c.JSON(http.StatusBadRequest, h)
 		return
@@ -103,7 +93,7 @@ func FileSend(c *gin.Context) {
 		TaskScouts := TaskSave(taskId, t.Detach, scouts)
 
 		// 协程等待文件下发完毕之后让FM清理缓存文件
-		go utils.RemoveFMFile(TaskScouts, taskId)
+		go utils.RemoveFMFile(taskId)
 
 		Task := &model.ScoutFileRequest{
 			TaskId:   taskId,
@@ -120,7 +110,7 @@ func FileSend(c *gin.Context) {
 		}
 
 		// 任务推送
-		TaskPush(taskId, scouts, TaskScouts, ScoutMessage)
+		TaskPush(taskId, scouts, &TaskScouts, ScoutMessage)
 
 		// 获取结果
 		h = TaskResult(taskId, t.Detach, t.Timeout, h)

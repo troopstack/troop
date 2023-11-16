@@ -1,11 +1,9 @@
 package controllers
 
 import (
+	"github.com/troopstack/troop/src/modules/file/utils"
 	"io/ioutil"
 	"net/http"
-	"os"
-
-	"github.com/troopstack/troop/src/modules/file/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -41,7 +39,7 @@ func FileUpload(c *gin.Context) {
 
 	saveFile := saveDir + "/" + t.FileName
 
-	err = ioutil.WriteFile(saveFile, t.File, os.ModeAppend)
+	err = ioutil.WriteFile(saveFile, t.File, 0444)
 
 	if err != nil {
 		utils.FailOnError(err, "File write failed")
