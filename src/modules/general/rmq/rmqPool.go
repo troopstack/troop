@@ -24,7 +24,7 @@ type Service struct {
 
 	connections    map[int]connection
 	channels       map[int]channel
-	idelChannels   []int
+	idleChannels   []int
 	busyChannels   map[int]int
 	m              *sync.Mutex
 	wg             *sync.WaitGroup
@@ -125,7 +125,7 @@ func (S *Service) channelPool() {
 		for j := 0; j < S.ChannelNum; j++ {
 			key := index*S.ChannelNum + j
 			S.channels[key] = S.createChannel(index)
-			S.idelChannels = append(S.idelChannels, key)
+			S.idleChannels = append(S.idleChannels, key)
 		}
 	}
 }
@@ -298,19 +298,15 @@ func (S *Service) NotifyReturn(notifier func(message amqp.Return), ch *amqp.Chan
 func (S *Service) getChannel() (*amqp.Channel, int) {
 	S.m.Lock()
 	defer S.m.Unlock()
-	idelLength := len(S.idelChannels)
-	if idelLength > 0 {
+	idleLength := len(S.idleChannels)
+	if idleLength > 0 {
 		rand.Seed(time.Now().Unix())
-		index := rand.Intn(idelLength)
-		channelId := S.idelChannels[index]
-		S.idelChannels = append(S.idelChannels[:index], S.idelChannels[index+1:]...)
+		index := rand.Intn(idleLength)
+		channelId := S.idleChannels[index]
+		S.idleChannels = append(S.idleChannels[:index], S.idleChannels[index+1:]...)
 		S.busyChannels[channelId] = channelId
 
 		ch := S.channels[channelId].ch
-		//log.Println("channels count: ",len(S.channels))
-		//log.Println("idel channels count: ",len(S.idelChannels))
-		//log.Println("busy channels count: ",len(S.busyChannels))
-		//log.Println("channel id: ",channelId)
 		return ch, channelId
 	} else {
 		//return S.createChannel(0,S.connections[0]),-1
@@ -450,7 +446,7 @@ func (S *Service) backChannelId(channelId int, ch *amqp.Channel) {
 	}
 	S.m.Lock()
 	defer S.m.Unlock()
-	S.idelChannels = append(S.idelChannels, channelId)
+	S.idleChannels = append(S.idleChannels, channelId)
 	delete(S.busyChannels, channelId)
 	return
 }
